@@ -42,12 +42,9 @@ feed.load(url, function(err, rss){
     // parsing start date, start time
     var rawDate = new Date(item.created);
 
-    var parsedDate = dateFormat(rawDate, "yyyy-mm-dd");
-    var parsedStartTime = dateFormat(rawDate, "h:MMTT");
+    item.date_from = dateFormat(rawDate, "yyyy-mm-dd");
+    item.start_time = dateFormat(rawDate, "h:MMTT");
 
-    item.date_from = parsedDate;
-    item.start_time = parsedStartTime;
- 
     // setting contents of returned text out here because we need it for determining if we should send
     var event_image;
 
@@ -94,29 +91,6 @@ await page.goto(item.link);
 
 
 
-
-/*
-puppeteer.launch({headless: true, args: ['--no-sandbox']}).then(browser => {
-  browser.newPage()
-  .then(page => page.goto('https://www.eonetwork.org/_layouts/15/login.aspx'));
-  .then(resp => page.type('#ctl00_PlaceHolderMain_txtUserName', login));
-  .then(resp => page.type('#ctl00_PlaceHolderMain_txtPassword', pass));
-  .then(resp => page.click('#ctl00_PlaceHolderMain_btnlogin'));
-  .then(resp => page.waitForNavigation());
-
-  .then(resp => page.goto(item.link));
-  .then(resp => page.waitFor(1000));
-
-  item.photo_url = ((page.$$('#eventImg')).attr('src'));
-  console.log(item.photo_url);
-
-  // close the browser instance
-  .then(buffer => browser.close());
-
-
-});
-
-*/
 
 
   });
