@@ -5,20 +5,23 @@ var pass = process.env.EOPASSWORD;
 var url = process.env.RSSURL;
 
 // adding modules
-const puppeteer = require('puppeteer');
-const fs = require('fs');
-const dateFormat = require('dateformat');
+const puppeteer           = require('puppeteer');
+const fs                  = require('fs');
+const dateFormat          = require('dateformat');
+const feed                = require('rss-to-json');
+const Json2csvParser      = require('json2csv').Parser;
 
-// utility functions
-console.log(url);
 
-// grabbing rss feed, converting it to json
-var feed = require('rss-to-json');
+// setting urls array here since it'll be looped over later
+var eventUrls = [];
+
+// loading rss feed to grab just the event links
 feed.load(url, function(err, rss){
   // throws an error, you could also catch it here
   if (err) throw err;
 
-  rss.items.forEach((item) => {
+  rss.items.forEach(item => {
+    /*
     if(item.description.indexOf("Location") > -1) {
       var matches = item.description.match(/Location[^:]*: (.*)$/);
 
@@ -36,68 +39,84 @@ feed.load(url, function(err, rss){
       item.address = 'TBD2';
     }
 
-    // assigning standard entriesy
-    item.event_website = item.link;
-
     // parsing start date, start time
+    /* not needed because we'll be scraping this from the page
     var rawDate = new Date(item.created);
 
     item.date_from = dateFormat(rawDate, "yyyy-mm-dd");
     item.start_time = dateFormat(rawDate, "h:MMTT");
-
-    // setting contents of returned text out here because we need it for determining if we should send
-    var event_image;
+    */
 
 
+    // pushing event link to urls array
+    eventUrls.push(item.link);
 
+    //var photo_url = await page.$$('#eventImg').attr('src');
+    //console.log(photo_url);
 
-
-(async () => {
-
-  // launch the browser
-  const browser = await puppeteer.launch({
-    headless: true // headless or non-headless
-  });
-  // open a new tab
-  const page = await browser.newPage();
-  
-await page.goto(
-  'https://www.eonetwork.org/_layouts/15/login.aspx',
-  {waitUntil: 'networkidle2'}
-);
-
-await page.goto('https://www.eonetwork.org/_layouts/15/login.aspx');
-await page.type('#ctl00_PlaceHolderMain_txtUserName', login);
-await page.type('#ctl00_PlaceHolderMain_txtPassword', pass);
-await page.click('#ctl00_PlaceHolderMain_btnlogin');
-await page.waitForNavigation();
-await page.goto(item.link);
-  
-  // close tab and browser
-  await page.close();
-  await browser.close();
-})();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    // assigning json variables, which will later be converted to the localist csv
+    // item.photo_url = photo_url;
   });
 
 
-console.log(rss);
-const Json2csvParser = require('json2csv').Parser;
+
+  // show links in the array
+  console.log(eventUrls);
+
+
+
+
+  // browse to the page and do stuff
+  (async () => {
+    // launch the browser
+    const browser = await puppeteer.launch({
+      headless: true // headless or non-headless
+    });
+
+    // open a new tab
+    const page = await browser.newPage();
+
+    // login to the eonetwork site
+    await page.goto('https://www.eonetwork.org/_layouts/15/login.aspx',{waitUntil: 'networkidle2'});
+    await page.goto('https://www.eonetwork.org/_layouts/15/login.aspx');
+    await page.type('#ctl00_PlaceHolderMain_txtUserName', login);
+    await page.type('#ctl00_PlaceHolderMain_txtPassword', pass);
+    await page.click('#ctl00_PlaceHolderMain_btnlogin');
+    await page.waitForNavigation();
+    await page.setJavaScriptEnabled(false)
+
+    // loop over array of event links and write it to json values
+    for (let i = 0; i < eventUrls.length; i++) {
+      const url = eventUrls[i];
+      await page.goto(`${url}`);
+      //await page.waitForNavigation({ waitUntil: 'networkidle2' });
+
+      //await page.waitForSelector('#eventImg');
+
+      var photo_url = await page.$('#eventImg');
+      //console.log(photo_url);
+    }
+
+    // close tab and browser
+    await page.close();
+    await browser.close();
+  })(); // end of async
+
+
+  //console.log(rss);
+
+}); // end of rss feed pulldown
+
+
+
+
+
+
+
+
+
+
+/*
 const fields = ['title',
 'description',
 'date_from',
@@ -149,6 +168,12 @@ try {
   console.error(err);
 }
 
+*/
 
 
-});
+
+
+
+
+
+
