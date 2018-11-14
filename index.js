@@ -31,9 +31,7 @@ feed.load(url, function(err, rss){
   // browse to the page and do stuff
   (async () => {
     // launch the browser
-    const browser = await puppeteer.launch({
-      headless: true // headless or non-headless
-    });
+    const browser = await puppeteer.launch({args: ['--no-sandbox'], headless: true});
 
     // open a new tab
     const page = await browser.newPage();
@@ -55,8 +53,8 @@ feed.load(url, function(err, rss){
 
     // loop over array of event links and write it to json values
     //DEBUG, limit to 1
-    for (let i = 1; i < 2; i++) {
-    //for (let i = 0; i < eventUrls.length; i++) {
+    //for (let i = 1; i < 2; i++) {
+    for (let i = 0; i < eventUrls.length; i++) {
       // setting the event url for this iteration
       const url = eventUrls[i];
 
