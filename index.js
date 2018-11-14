@@ -10,7 +10,7 @@ const fs                  = require('fs');
 const dateFormat          = require('dateformat');
 const feed                = require('rss-to-json');
 const Json2csvParser      = require('json2csv').Parser;
-
+const moment              = require('moment');
 
 // setting urls array here since it'll be looped over later
 var eventUrls = [];
@@ -55,8 +55,8 @@ feed.load(url, function(err, rss){
 
     // loop over array of event links and write it to json values
     //DEBUG, limit to 1
-    //for (let i = 1; i < 2; i++) {
-    for (let i = 0; i < eventUrls.length; i++) {
+    for (let i = 1; i < 2; i++) {
+    //for (let i = 0; i < eventUrls.length; i++) {
       // setting the event url for this iteration
       const url = eventUrls[i];
 
@@ -69,43 +69,67 @@ feed.load(url, function(err, rss){
 
       // event title
       var eventTitle = await page.evaluate(el => el.innerHTML, await page.$('#lblEventTitle'));
-      item.title = eventTitle;
+      item['Title'] = eventTitle;
       console.log(eventTitle);
 
       // event date
       var rawDate = await page.evaluate(el => el.innerHTML, await page.$('#lblEventDate'));
-      var parsedDate = new Date(rawDate);
 
-      //var dateFrom = dateFormat(rawDate, "yyyy-mm-dd");
-      //var startTime = dateFormat(rawDate, "h:MMTT");
-      //var endTime = dateFormat(rawDate, "h:MMTT"); // FIXME, split on dash
+      // event day and start time
+      // sample date 15 May 2019 12:00 AM - 12:00 AM ((GMT-05:00) Eastern Time (US & Canada))
+      var rawDateDay = rawDate.split(' - ')[0]; // also grabs start time
+      var objectDateDay = new Date(rawDateDay);
+      var dateFrom = dateFormat(objectDateDay, "yyyy-mm-dd");
+      var startTime = dateFormat(objectDateDay, "h:MMTT");
+      item['Date From'] = dateFrom;
+      item['Date To'] = dateFrom; // same day event
+      console.log('date from ' + dateFrom);
+      item['Start Time'] = startTime;
+      console.log('start time ' + startTime);
 
-      var eventVenue = await page.evaluate(el => el.innerHTML, await page.$('#lblVenue'));
+      // end time
+      var rawDateEndTimeSplit = rawDate.split(' - ')[1];
+      var rawDateEndTime = rawDateEndTimeSplit.split('((')[0];
+      var objectDateEndTime = new Date(rawDateEndTime);
+      var endTime = moment(objectDateEndTime, "h:MM TT")
+      item['End Time'] = endTime;
+      console.log('end time ' + endTime);
+
+      // venue
+      var rawEventVenue = await page.evaluate(el => el.innerHTML, await page.$('#lblVenue'));
+      var eventVenue = rawEventVenue.split('</b> ')[1];
+      item['Location'] = eventVenue;
+      item['Address'] = eventVenue;
       console.log(eventVenue);
 
-
-      var eventType = await page.evaluate(el => el.innerHTML, await page.$('#lblEventType'));
+      var rawEventType = await page.evaluate(el => el.innerHTML, await page.$('#lblEventType'));
+      var eventType = rawEventType.split('</b> ')[1];
+      item['Event Types'] = eventType;
       console.log(eventType);
 
       var eventContact = await page.evaluate(el => el.innerHTML, await page.$('#lblEventContact'));
+      item['Event Contact'] = eventContact;
       console.log(eventContact);
 
       var eventDescription = await page.evaluate(el => el.innerHTML, await page.$('#lblDescription'));
+      item['Description'] = eventDescription;
       console.log(eventDescription);
 
       var imgSelector = "#eventImg";
       var eventPhoto = await page.$$eval(imgSelector, images => {return images.map((image)=>image.src)});
       var eventPhoto = eventPhoto[0];
+      item['Photo URL'] = eventPhoto;
       console.log(eventPhoto);
 
       var eventMemberPrice = await page.evaluate(el => el.innerHTML, await page.$('#lblMemberPrice'));
+      item['Cost'] = eventMemberPrice;
       console.log(eventMemberPrice);
 
       var eventGuestPrice = await page.evaluate(el => el.innerHTML, await page.$('#lblAdultGuestPrice'));
+      item['Guest Cost'] = eventGuestPrice
       console.log(eventGuestPrice);
 
-
-
+      item['Event Website'] = url;
 
       eventObjects.push(item);
 
@@ -124,22 +148,22 @@ feed.load(url, function(err, rss){
    console.log(eventObjects);
 
 
-  const fields = ['title',
-  'description',
-  'date_from',
-  'date_to',
+  const fields = ['Title',
+  'Description',
+  'Date From',
+  'Date To',
   'Recurrence',
-  'start_time',
-  'end_time',
-  'location',
-  'address',
+  'Start Time',
+  'End Time',
+  'Location',
+  'Address',
   'City',
   'State',
-  'event_website',
+  'Event Website',
   'Room',
   'Keywords',
   'Tags',
-  'photo_url',
+  'Photo URL',
   'Ticket URL',
   'Cost',
   'Hashtag',
@@ -155,7 +179,8 @@ feed.load(url, function(err, rss){
   'Widget Only',
   'Channels Only',
   'Exclude From Trending',
-  'Event Types'];
+  'Event Types',
+  'Guest Cost'];
   const opts = { fields };
 
   try {
