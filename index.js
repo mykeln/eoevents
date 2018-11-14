@@ -130,72 +130,63 @@ feed.load(url, function(err, rss){
       item['Event Website'] = url;
 
       eventObjects.push(item);
-
-      // fixme: write item.blah for json pickup
-
-
-
-
-   } // end for each event url loop
+    } // end for each event url loop
 
     // close tab and browser
     await page.close();
     await browser.close();
 
-   // array of event objects should be populated
-   console.log(eventObjects);
+    // array of event objects should be populated
+    console.log(eventObjects);
 
+    const fields = ['Title',
+                    'Description',
+                    'Date From',
+                    'Date To',
+                    'Recurrence',
+                    'Start Time',
+                    'End Time',
+                    'Location',
+                    'Address',
+                    'City',
+                    'State',
+                    'Event Website',
+                    'Room',
+                    'Keywords',
+                    'Tags',
+                    'Photo URL',
+                    'Ticket URL',
+                    'Cost',
+                    'Hashtag',
+                    'Facebook URL',
+                    'Group',
+                    'Department',
+                    'Allow User Activity',
+                    'Allow User Interest',
+                    'Visibility',
+                    'Featured Tabs',
+                    'Sponsored',
+                    'Venue Page Only',
+                    'Widget Only',
+                    'Channels Only',
+                    'Exclude From Trending',
+                    'Event Types',
+                    'Guest Cost'];
+    const opts = { fields };
 
-  const fields = ['Title',
-  'Description',
-  'Date From',
-  'Date To',
-  'Recurrence',
-  'Start Time',
-  'End Time',
-  'Location',
-  'Address',
-  'City',
-  'State',
-  'Event Website',
-  'Room',
-  'Keywords',
-  'Tags',
-  'Photo URL',
-  'Ticket URL',
-  'Cost',
-  'Hashtag',
-  'Facebook URL',
-  'Group',
-  'Department',
-  'Allow User Activity',
-  'Allow User Interest',
-  'Visibility',
-  'Featured Tabs',
-  'Sponsored',
-  'Venue Page Only',
-  'Widget Only',
-  'Channels Only',
-  'Exclude From Trending',
-  'Event Types',
-  'Guest Cost'];
-  const opts = { fields };
+    try {
+      const parser = new Json2csvParser(opts);
+      const csv = parser.parse(eventObjects);
 
-  try {
-    const parser = new Json2csvParser(opts);
-    const csv = parser.parse(eventObjects);
-
-    fs.writeFile('eonetwork_feed.csv', csv, (err) => {
-      // throws an error, you could also catch it here
-      if (err) throw err;
-      //success case, the file was saved
-      console.log('csv written');
-    });
-
-
-  } catch (err) {
-    console.error(err);
-  }
-
-})(); // end of async
+      // write the csv file based on the events collected
+      fs.writeFile('eonetwork_feed.csv', csv, (err) => {
+        // throws an error, you could also catch it here
+        if (err) throw err;
+        //success case, the file was saved
+        console.log('csv written');
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  })(); // end of async
 }); // end of rss feed pulldown
