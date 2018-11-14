@@ -21,6 +21,7 @@
     "dotenv": "^6.0.0",
     "download-file": "^0.1.5",
     "json2csv": "^4.3.0",
+    "moment": "^2.22.2",
     "puppeteer": "^1.10.0",
     "rss-to-json": "^1.0.4",
     "xml2rec": "^1.0.26"
